@@ -2,7 +2,7 @@ name: DVC Tracking with Github Actions
 on: 
   pull_request:
     types: [closed]
-    branches: [main]
+    branches: [main, musa, zain]
 jobs:
   run:
     if: github.event.pull_request.merged==true
