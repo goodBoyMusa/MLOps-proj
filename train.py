@@ -57,3 +57,6 @@ def predict():
     # Convert the predictions to a JSON response
     response = {'predictions': predictions.tolist()}
     return jsonify(response)
+
+app.run()
+
