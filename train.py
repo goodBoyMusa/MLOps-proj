@@ -2,39 +2,58 @@ import csv
 import json
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
+from flask import Flask, request, jsonify
 
-# Load the data from the CSV file
-with open('creditcard.csv', mode='r') as file:
-    reader = csv.reader(file)
-    data = []
-    for row in reader:
-        data.append(row)
+app = Flask(__name__)
 
-# Split the data into features and labels
-features = []
-labels = []
-for row in data[1:]:
-    features.append(row[:-1])
-    labels.append(row[-1])
+@app.route('/predict', methods=['POST'])
+def predict():
+    # Load the data from the CSV file
+    with open('creditcard.csv', mode='r') as file:
+        reader = csv.reader(file)
+        data = []
+        for row in reader:
+            data.append(row)
 
-# Convert the features and labels to float and integer data types
-for i in range(len(features)):
-    for j in range(len(features[0])):
-        features[i][j] = float(features[i][j])
-    labels[i] = int(labels[i])
+    # Split the data into features and labels
+    features = []
+    labels = []
+    for row in data[1:]:
+        features.append(row[:-1])
+        labels.append(row[-1])
 
-# Split the data into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.3, random_state=42)
+    # Convert the features and labels to float and integer data types
+    for i in range(len(features)):
+        for j in range(len(features[0])):
+            features[i][j] = float(features[i][j])
+        labels[i] = int(labels[i])
 
-# Train the decision tree classifier
-clf = DecisionTreeClassifier(max_depth=10)
-clf.fit(X_train, y_train)
+    # Split the data into training and testing sets
+    X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.3, random_state=42)
 
-# Predict the labels for the test set
-y_pred = clf.predict(X_test)
+    # Train the decision tree classifier
+    clf = DecisionTreeClassifier(max_depth=10)
+    clf.fit(X_train, y_train)
 
-# Print the accuracy of the classifier
-accuracy = sum(1 for i in range(len(y_pred)) if y_pred[i] == y_test[i]) / float(len(y_pred))
-# Now print to file
-with open("metrics.json", 'w') as outfile:
-        json.dump({ "accuracy": accuracy}, outfile)
+    
+    # Predict the labels for the test set
+    y_pred = clf.predict(X_test)
+
+    # Print the accuracy of the classifier
+    accuracy = sum(1 for i in range(len(y_pred)) if y_pred[i] == y_test[i]) / float(len(y_pred))
+    # Now print to file
+    with open("metrics.json", 'w') as outfile:
+            json.dump({ "accuracy": accuracy}, outfile)
+
+    # Get the request data and convert it to float data types
+    request_data = request.json
+    features = []
+    for feature in request_data['features']:
+        features.append([float(val) for val in feature])
+    
+    # Predict the labels
+    predictions = clf.predict(features)
+    
+    # Convert the predictions to a JSON response
+    response = {'predictions': predictions.tolist()}
+    return jsonify(response)
