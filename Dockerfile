@@ -8,3 +8,4 @@ RUN make install
 
 EXPOSE 8080
 
+RUN "python train.py"
